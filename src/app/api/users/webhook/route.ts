@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { usersTable } from "@/db/schema";
+import { eq } from "drizzle-orm/sql";
 
 export async function POST(req: Request) {
   const SIGNING_SECRET = process.env.SIGNING_SECRET;
@@ -60,6 +61,28 @@ export async function POST(req: Request) {
       name: `${data.first_name} ${data.last_name}`,
       imageUrl: data.image_url,
     });
+  }
+
+  if (eventType === "user.deleted") {
+    const data = evt.data;
+    if (!data.id) {
+      return new Response("Missing user id", { status: 400 });
+    }
+    await db.delete(usersTable).where(eq(usersTable.clerkId, data.id));
+  }
+
+  if (eventType === "user.updated") {
+    const data = evt.data;
+    if (!data.id) {
+      return new Response("Missing user id", { status: 400 });
+    }
+    await db
+      .update(usersTable)
+      .set({
+        name: `${data.first_name} ${data.last_name}`,
+        imageUrl: data.image_url,
+      })
+      .where(eq(usersTable.clerkId, data.id));
   }
 
   return new Response("Webhook received", { status: 200 });
