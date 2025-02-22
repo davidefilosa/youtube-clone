@@ -8,6 +8,41 @@
       "when": 1739879073956,
       "tag": "0000_pink_mongu",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1739962323947,
+      "tag": "0001_large_frog_thor",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1740061593302,
+      "tag": "0002_purple_banshee",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1740062382655,
+      "tag": "0003_breezy_warbound",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1740131642282,
+      "tag": "0004_mute_smiling_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1740215261349,
+      "tag": "0005_glossy_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }
