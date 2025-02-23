@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { VideoThumbnail } from "@/modules/videos/ui/components/video-thumbnail";
+import { snakecaseToTitlecase } from "@/lib/utils";
+import { format } from "date-fns";
 
 export const VideosSection = () => {
   return (
@@ -62,13 +64,28 @@ const VideosSectionSuspense = () => {
                             thumbnailUrl={video.thumbnailUrl}
                             previewUrl={video.previewUrl}
                             title={video.title}
+                            duration={video.duration ?? 0}
                           />
+                        </div>
+                        <div className="flex flex-col overflow-hidden gap-y-1">
+                          <span className="text-xs line-clamp-1">
+                            {video.title}
+                          </span>
+                          <span className="text-xs text-muted-foreground line-clamp-1">
+                            {video.description || "No description"}
+                          </span>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>Visible</TableCell>
-                    <TableCell>Complete</TableCell>
-                    <TableCell>{video.createdAt.toDateString()}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {snakecaseToTitlecase(video.muxStatus || "error")}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm truncate">
+                      {format(video.createdAt, "d MMM yyyy")}
+                    </TableCell>
                     <TableCell className="text-right">10</TableCell>
                     <TableCell className="text-right">10</TableCell>
                     <TableCell className="text-right pr-6">10</TableCell>

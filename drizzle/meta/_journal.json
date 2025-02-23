@@ -57,6 +57,20 @@
       "when": 1740288353060,
       "tag": "0007_unknown_spacker_dave",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1740289311661,
+      "tag": "0008_sloppy_bulldozer",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1740293123716,
+      "tag": "0009_abandoned_toro",
+      "breakpoints": true
     }
   ]
 }
