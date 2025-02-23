@@ -64,7 +64,7 @@ const VideosSectionSuspense = () => {
                             thumbnailUrl={video.thumbnailUrl}
                             previewUrl={video.previewUrl}
                             title={video.title}
-                            duration={video.duration ?? 0}
+                            duration={video.duration}
                           />
                         </div>
                         <div className="flex flex-col overflow-hidden gap-y-1">
@@ -77,7 +77,9 @@ const VideosSectionSuspense = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>Visible</TableCell>
+                    <TableCell>
+                      {snakecaseToTitlecase(video.visibility)}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         {snakecaseToTitlecase(video.muxStatus || "error")}
