@@ -66,14 +66,16 @@ export const POST = async (request: Request) => {
       if (!playbackId) {
         return new Response("No playback id found", { status: 400 });
       }
-      const thumbnail = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
+      const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
+      const previewUrl = `https://image.mux.com/${playbackId}/animated.gif`;
       await db
         .update(videos)
         .set({
           muxStatus: data.status,
           muxPlaybackId: playbackId,
           muxAssetId: data.id,
-          thumbnailUrl: thumbnail,
+          thumbnailUrl,
+          previewUrl,
         })
         .where(eq(videos.muxUploadId, data.upload_id));
 
