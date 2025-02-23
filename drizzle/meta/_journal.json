@@ -43,6 +43,13 @@
       "when": 1740215261349,
       "tag": "0005_glossy_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1740287615188,
+      "tag": "0006_far_spacker_dave",
+      "breakpoints": true
     }
   ]
 }
