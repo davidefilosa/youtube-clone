@@ -71,6 +71,13 @@
       "when": 1740293123716,
       "tag": "0009_abandoned_toro",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1740389668023,
+      "tag": "0010_daily_spitfire",
+      "breakpoints": true
     }
   ]
 }
