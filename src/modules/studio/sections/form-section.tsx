@@ -14,6 +14,7 @@ import {
   CopyCheckIcon,
   Globe2Icon,
   ImagePlusIcon,
+  Loader2Icon,
   LockIcon,
   MoreVerticalIcon,
   RotateCwIcon,
@@ -50,6 +51,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { THUMBNAIL_FALLBACK } from "@/modules/videos/costants";
 import { ThumbanilUploadModal } from "../ui/components/thumbnail-upload-modal";
+import { ThumbanilGenerateModal } from "../ui/components/thumbnail-generate-modal";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
 interface FormSectionProps {
   videoId: string;
@@ -66,13 +70,50 @@ export const FormSection = ({ videoId }: FormSectionProps) => {
 };
 
 const FormVideoSkeletor = () => {
-  return <div>Loading</div>;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-48 mt-2" />
+        </div>
+        <div className="flex items-center gap-x-2">
+          <Skeleton className="h-10 w-20" />
+          <Skeleton className="h-10 w-10 rounded-full" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="space-y-8 lg:col-span-3">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-40" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+
+        <div className="flex flex-col gap-y-8 lg:col-span-2">
+          <Card className="p-4 bg-[#F9F9F9] rounded-xl">
+            <Skeleton className="h-40 w-full" />
+            <div className="p-4 flex flex-col gap-y-6">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
   const router = useRouter();
   const [isCoping, setIsCoping] = useState(false);
   const [thumbnalilModalOpen, setThumbnalilModalOpen] = useState(false);
+  const [thumbnalilGenerateModalOpen, setThumbnalilGenerateModalOpen] =
+    useState(false);
+
   const [video] = trpc.studio.getOne.useSuspenseQuery({ id: videoId });
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const utils = trpc.useUtils();
@@ -88,6 +129,7 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
       console.log(e);
     },
   });
+
   const restoreThumbanil = trpc.videos.restoreThumbnail.useMutation({
     onSuccess: () => {
       toast.success("Thumbnail restored", { id: "restore-thumbnail" });
@@ -101,9 +143,45 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
     },
   });
 
+  const generateTitle = trpc.videos.generateTitle.useMutation({
+    onSuccess: () => {
+      toast.success("Title generated", { id: "title-ai" });
+      utils.studio.getOne.invalidate({ id: video.id });
+      utils.studio.getMany.invalidate();
+    },
+    onError: (e) => {
+      toast.error("Failed to generate title", { id: "title-ai" });
+
+      console.log(e);
+    },
+  });
+
+  const generateDescription = trpc.videos.generateDescription.useMutation({
+    onSuccess: () => {
+      toast.success("Description generated", { id: "description-ai" });
+      utils.studio.getOne.invalidate({ id: video.id });
+      utils.studio.getMany.invalidate();
+    },
+    onError: (e) => {
+      toast.error("Failed to generate description", { id: "description-ai" });
+
+      console.log(e);
+    },
+  });
+
   const onRestoreThumbnail = () => {
     toast.loading("Restoring thumbnail", { id: "restore-thumbnail" });
     restoreThumbanil.mutate({ id: video.id });
+  };
+
+  const onGenerateTitle = () => {
+    toast.loading("Generating title", { id: "title-ai" });
+    generateTitle.mutate({ id: video.id });
+  };
+
+  const onGenerateDescription = () => {
+    toast.loading("Generating description", { id: "description-ai" });
+    generateDescription.mutate({ id: video.id });
   };
 
   const remove = trpc.videos.remove.useMutation({
@@ -136,8 +214,7 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
     update.mutate(values);
   }
 
-  const fullURL =
-    window.location.origin && `${window.location.origin}/videos/${video.id}`;
+  const fullURL = `http://localhost:3000/videos/${video.id}`;
 
   const onCopy = () => {
     setIsCoping(true);
@@ -156,6 +233,11 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
         open={thumbnalilModalOpen}
         onOpenChange={setThumbnalilModalOpen}
         videoId={video.id}
+      />
+      <ThumbanilGenerateModal
+        open={thumbnalilGenerateModalOpen}
+        videoId={video.id}
+        onOpenChange={setThumbnalilGenerateModalOpen}
       />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -192,7 +274,25 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <div className="flex gap-2 items-center">
+                      <FormLabel>Title</FormLabel>
+                      {video.muxTrackStatus === "ready" && (
+                        <Button
+                          type="button"
+                          size={"icon"}
+                          variant={"outline"}
+                          onClick={onGenerateTitle}
+                          className="rounded-full size-6 [&_svg]:size-3"
+                          disabled={generateTitle.isPending}
+                        >
+                          {generateTitle.isPending ? (
+                            <Loader2Icon className="animate-spin" />
+                          ) : (
+                            <SparklesIcon />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                     <FormControl>
                       <Input
                         placeholder="Add a title to your video"
@@ -209,7 +309,25 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <div className="flex items-center gap-x-2">
+                      <FormLabel>Description</FormLabel>
+                      {video.muxTrackStatus === "ready" && (
+                        <Button
+                          type="button"
+                          size={"icon"}
+                          variant={"outline"}
+                          onClick={onGenerateDescription}
+                          className="rounded-full size-6 [&_svg]:size-3"
+                          disabled={generateDescription.isPending}
+                        >
+                          {generateDescription.isPending ? (
+                            <Loader2Icon className="animate-spin" />
+                          ) : (
+                            <SparklesIcon />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                     <FormControl>
                       <Textarea
                         placeholder="Add a description to your video"
@@ -255,7 +373,11 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                               <ImagePlusIcon className="size-4 mr-1" />
                               Change
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setThumbnalilGenerateModalOpen(true)
+                              }
+                            >
                               <SparklesIcon className="size-4 mr-1" />
                               AI-Generated
                             </DropdownMenuItem>

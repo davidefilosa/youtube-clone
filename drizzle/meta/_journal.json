@@ -78,6 +78,34 @@
       "when": 1740389668023,
       "tag": "0010_daily_spitfire",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1740650145661,
+      "tag": "0011_quiet_proemial_gods",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1740657086200,
+      "tag": "0012_yielding_jubilee",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1740720049217,
+      "tag": "0013_cynical_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1740720699197,
+      "tag": "0014_special_shocker",
+      "breakpoints": true
     }
   ]
 }

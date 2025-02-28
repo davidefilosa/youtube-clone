@@ -1,0 +1,1 @@
+ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_pk" PRIMARY KEY("viewer_id","creater_id");

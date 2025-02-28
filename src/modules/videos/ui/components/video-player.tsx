@@ -1,6 +1,7 @@
 import React from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import { THUMBNAIL_FALLBACK } from "../../costants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface VideoPlayerProps {
   playbackId?: string | null | undefined;
@@ -8,6 +9,15 @@ interface VideoPlayerProps {
   autoPlay?: boolean;
   onPlay?: () => void;
 }
+
+export const VideoPlayerSkeleton = () => {
+  return (
+    <div className="aspect-video rounded-xl overflow-hidden relative">
+      <Skeleton className="w-full h-full" />
+    </div>
+  );
+};
+
 export const VideoPlayer = ({
   playbackId,
   thumbnailUrl,
