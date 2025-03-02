@@ -6,7 +6,7 @@ import {
   protectedProcedure,
 } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, or, lt, getTableColumns, count } from "drizzle-orm";
 import { z } from "zod";
 
 export const commentsRouter = createTRPCRouter({
@@ -43,16 +43,52 @@ export const commentsRouter = createTRPCRouter({
     }),
 
   getMany: baseProcedure
-    .input(z.object({ videoId: z.string() }))
+    .input(
+      z.object({
+        videoId: z.string(),
+        cursor: z
+          .object({ videoId: z.string(), updatedAt: z.date() })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      })
+    )
     .query(async ({ input }) => {
-      const { videoId } = input;
+      const { videoId, cursor, limit } = input;
+      const [totlaData] = await db
+        .select({ count: count() })
+        .from(comments)
+        .where(eq(comments.videoId, videoId));
+
       const data = await db
-        .select()
+        .select({
+          ...getTableColumns(comments),
+          user: usersTable,
+        })
         .from(comments)
         .innerJoin(usersTable, eq(comments.userId, usersTable.id))
-        .where(eq(comments.videoId, videoId))
-        .orderBy(desc(comments.createdAt));
+        .where(
+          and(
+            eq(comments.videoId, videoId),
+            cursor
+              ? or(
+                  lt(comments.updatedAt, cursor.updatedAt),
+                  and(
+                    eq(comments.updatedAt, cursor.updatedAt),
+                    lt(comments.videoId, cursor.videoId)
+                  )
+                )
+              : undefined
+          )
+        )
+        .orderBy(desc(comments.createdAt), desc(comments.videoId))
+        .limit(limit + 1);
 
-      return data;
+      const hasMore = data.length > limit;
+      const items = hasMore ? data.slice(0, -1) : data;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? { videoId: lastItem.videoId, updatedAt: lastItem.updatedAt }
+        : null;
+      return { items, nextCursor, totlaCount: totlaData.count };
     }),
 });
