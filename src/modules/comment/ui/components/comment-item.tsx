@@ -3,12 +3,18 @@ import { CommentsGetManyOutput } from "../../types";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
+import { CommentMenu } from "./comment-menu";
+import { CommentReactions } from "./comment-reactions";
 
 interface CommentItepmProps {
   comment: CommentsGetManyOutput["items"][number];
 }
 
 export const CommentItem = ({ comment }: CommentItepmProps) => {
+  const { userId } = useAuth();
+  const isAuthor = userId === comment.user.clerkId;
+
   return (
     <div className="flex gap-4">
       <Link href={`/users/${comment.user.id}`}>
@@ -32,7 +38,21 @@ export const CommentItem = ({ comment }: CommentItepmProps) => {
           </div>
         </Link>
         <p className="text-sm">{comment.value}</p>
+        <div className="mt-1">
+          <CommentReactions
+            viewerReaction={comment.viewerReaction}
+            videoId={comment.videoId}
+            dislikeCount={comment.dislikeCount}
+            likeCount={comment.likeCount}
+            commentId={comment.id}
+          />
+        </div>
       </div>
+      <CommentMenu
+        commentId={comment.id}
+        videoId={comment.videoId}
+        isAuthor={isAuthor}
+      />
     </div>
   );
 };

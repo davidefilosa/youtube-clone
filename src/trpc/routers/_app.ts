@@ -6,6 +6,7 @@ import { videoViewsRouter } from "@/modules/video-views/server/procedure";
 import { videoReactionRouter } from "@/modules/reaction/server/procedure";
 import { subscriptionsRouter } from "@/modules/subscription/server/procedure";
 import { commentsRouter } from "@/modules/comment/server/procedure";
+import { commentReactionRouter } from "@/modules/comment-reactions/server/procedure";
 
 export const appRouter = createTRPCRouter({
   categories: categoriesRouter,
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   videoReaction: videoReactionRouter,
   subscriptions: subscriptionsRouter,
   comments: commentsRouter,
+  commentReaction: commentReactionRouter,
 });
 
 // Export only the type of a router!

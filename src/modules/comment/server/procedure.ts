@@ -1,12 +1,21 @@
 import { db } from "@/db";
-import { comments, usersTable, videos } from "@/db/schema";
+import { commentReactions, comments, usersTable, videos } from "@/db/schema";
 import {
   baseProcedure,
   createTRPCRouter,
   protectedProcedure,
 } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
-import { and, eq, desc, or, lt, getTableColumns, count } from "drizzle-orm";
+import {
+  and,
+  eq,
+  desc,
+  or,
+  lt,
+  getTableColumns,
+  count,
+  inArray,
+} from "drizzle-orm";
 import { z } from "zod";
 
 export const commentsRouter = createTRPCRouter({
@@ -52,36 +61,75 @@ export const commentsRouter = createTRPCRouter({
         limit: z.number().min(1).max(100),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const { videoId, cursor, limit } = input;
-      const [totlaData] = await db
-        .select({ count: count() })
-        .from(comments)
-        .where(eq(comments.videoId, videoId));
+      const { clerkUserId } = ctx;
 
-      const data = await db
-        .select({
-          ...getTableColumns(comments),
-          user: usersTable,
-        })
-        .from(comments)
-        .innerJoin(usersTable, eq(comments.userId, usersTable.id))
-        .where(
-          and(
-            eq(comments.videoId, videoId),
-            cursor
-              ? or(
-                  lt(comments.updatedAt, cursor.updatedAt),
-                  and(
-                    eq(comments.updatedAt, cursor.updatedAt),
-                    lt(comments.videoId, cursor.videoId)
+      let userId;
+
+      const [user] = await db
+        .select()
+        .from(usersTable)
+        .where(inArray(usersTable.clerkId, clerkUserId ? [clerkUserId] : []));
+
+      if (user) userId = user.id;
+
+      const viewerReactions = db.$with("viewer_reactions").as(
+        db
+          .select({
+            commentId: commentReactions.commentId,
+            type: commentReactions.type,
+          })
+          .from(commentReactions)
+          .where(inArray(commentReactions.userId, userId ? [userId] : []))
+      );
+
+      const [totalData, data] = await Promise.all([
+        db
+          .select({ count: count() })
+          .from(comments)
+          .where(eq(comments.videoId, videoId)),
+        db
+          .with(viewerReactions)
+          .select({
+            ...getTableColumns(comments),
+            user: usersTable,
+            likeCount: db.$count(
+              commentReactions,
+              and(
+                eq(comments.id, commentReactions.commentId),
+                eq(commentReactions.type, "like")
+              )
+            ),
+            dislikeCount: db.$count(
+              commentReactions,
+              and(
+                eq(comments.id, commentReactions.commentId),
+                eq(commentReactions.type, "dislike")
+              )
+            ),
+            viewerReaction: viewerReactions.type,
+          })
+          .from(comments)
+          .innerJoin(usersTable, eq(comments.userId, usersTable.id))
+          .leftJoin(viewerReactions, eq(viewerReactions.commentId, comments.id))
+          .where(
+            and(
+              eq(comments.videoId, videoId),
+              cursor
+                ? or(
+                    lt(comments.updatedAt, cursor.updatedAt),
+                    and(
+                      eq(comments.updatedAt, cursor.updatedAt),
+                      lt(comments.videoId, cursor.videoId)
+                    )
                   )
-                )
-              : undefined
+                : undefined
+            )
           )
-        )
-        .orderBy(desc(comments.createdAt), desc(comments.videoId))
-        .limit(limit + 1);
+          .orderBy(desc(comments.createdAt), desc(comments.videoId))
+          .limit(limit + 1),
+      ]);
 
       const hasMore = data.length > limit;
       const items = hasMore ? data.slice(0, -1) : data;
@@ -89,6 +137,18 @@ export const commentsRouter = createTRPCRouter({
       const nextCursor = hasMore
         ? { videoId: lastItem.videoId, updatedAt: lastItem.updatedAt }
         : null;
-      return { items, nextCursor, totlaCount: totlaData.count };
+      return { items, nextCursor, totlaCount: totalData[0].count };
+    }),
+  remove: protectedProcedure
+    .input(z.object({ commentId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const { id: userId } = ctx.user;
+      const { commentId } = input;
+      const [deletedComment] = await db
+        .delete(comments)
+        .where(and(eq(comments.userId, userId), eq(comments.id, commentId)))
+        .returning();
+
+      return deletedComment;
     }),
 });

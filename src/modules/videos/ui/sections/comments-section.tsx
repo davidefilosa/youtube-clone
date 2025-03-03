@@ -5,6 +5,7 @@ import { DEFAULT_LIMIT } from "@/constants";
 import { CommentForm } from "@/modules/comment/ui/components/comment-form";
 import { CommentItem } from "@/modules/comment/ui/components/comment-item";
 import { trpc } from "@/trpc/client";
+import { Loader2Icon } from "lucide-react";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -23,7 +24,11 @@ export const CommentsSection = ({ videoId }: CommentsSectionProps) => {
 };
 
 const ComentsSectionSkeletor = () => {
-  return <div>Loading...</div>;
+  return (
+    <div className="mt-6 flex justify-center items-center">
+      <Loader2Icon className="size-7 text-muted-foreground animate-spin" />
+    </div>
+  );
 };
 
 const ComentsSectionSuspense = ({ videoId }: CommentsSectionProps) => {
