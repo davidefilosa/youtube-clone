@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/trpc/client";
+import { useClerk } from "@clerk/nextjs";
 import { ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
 import React from "react";
 
@@ -20,10 +21,14 @@ export const CommentReactions = ({
   videoId,
   commentId,
 }: CommentReactionaProps) => {
+  const { openSignIn } = useClerk();
   const utils = trpc.useUtils();
   const createReaction = trpc.commentReaction.create.useMutation({
     onSuccess: () => {
       utils.comments.getMany.invalidate({ videoId });
+    },
+    onError: () => {
+      openSignIn();
     },
   });
   return (

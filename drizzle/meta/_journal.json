@@ -120,6 +120,13 @@
       "when": 1740989802325,
       "tag": "0016_nappy_silver_samurai",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1741002470481,
+      "tag": "0017_opposite_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

@@ -12,12 +12,16 @@ interface CommentMenuProps {
   commentId: string;
   videoId: string;
   isAuthor: boolean;
+  setIsReplyOpen: (isReplyOpen: boolean) => void;
+  variant?: "reply" | "comment";
 }
 
 export const CommentMenu = ({
   commentId,
   videoId,
   isAuthor,
+  setIsReplyOpen,
+  variant,
 }: CommentMenuProps) => {
   const utils = trpc.useUtils();
   const deleteComment = trpc.comments.remove.useMutation({
@@ -33,10 +37,12 @@ export const CommentMenu = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuItem>
-          <MessageSquareIcon />
-          Replay
-        </DropdownMenuItem>
+        {variant === "comment" && (
+          <DropdownMenuItem onClick={() => setIsReplyOpen(true)}>
+            <MessageSquareIcon />
+            Replay
+          </DropdownMenuItem>
+        )}
         {isAuthor && (
           <DropdownMenuItem
             onClick={() => deleteComment.mutate({ commentId })}
