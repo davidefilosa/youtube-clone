@@ -10,7 +10,7 @@ import { CommentMenu } from "./comment-menu";
 import { CommentReactions } from "./comment-reactions";
 import { Button } from "@/components/ui/button";
 import { CommentForm } from "./comment-form";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, CornerDownRight } from "lucide-react";
 import { trpc } from "@/trpc/client";
 import { DEFAULT_LIMIT } from "@/constants";
 
@@ -113,6 +113,18 @@ export const CommentItem = ({ comment, variant }: CommentItepmProps) => {
                       variant="reply"
                     />
                   ))
+                )}
+                {query.hasNextPage && (
+                  <Button
+                    variant={"tertiary"}
+                    size={"sm"}
+                    onClick={() => query.fetchNextPage()}
+                    className="w-fit rounded-full"
+                    disabled={query.isFetchingNextPage}
+                  >
+                    <CornerDownRight />
+                    Show more replies
+                  </Button>
                 )}
               </div>
             )}
