@@ -4,8 +4,15 @@ import { DEFAULT_LIMIT } from "@/constants";
 import { trpc } from "@/trpc/client";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { VideoRowCard } from "../components/video-row-card";
-import { VideoGridCard } from "../components/video-grid-card";
+import {
+  VideoRowCard,
+  VideoRowCardSkeleton,
+  videoRowCardSkeleton,
+} from "../components/video-row-card";
+import {
+  VideoGridCard,
+  VideoGridCardSkeleton,
+} from "../components/video-grid-card";
 import { InfiniteScroll } from "@/components/infinite-scroll";
 
 interface SuggestionsSectionProps {
@@ -27,7 +34,20 @@ export const SuggestionsSection = ({
 };
 
 const SuggestionsSectionSkeletor = () => {
-  return <div>Loading</div>;
+  return (
+    <>
+      <div className="hidden md:block space-y-3">
+        {Array.from({ length: 5 }).map((item, index) => (
+          <VideoRowCardSkeleton key={index} size={"compact"} />
+        ))}
+      </div>
+      <div className="block md:hidden space-y-10">
+        {Array.from({ length: 5 }).map((item, index) => (
+          <VideoGridCardSkeleton key={index} />
+        ))}
+      </div>
+    </>
+  );
 };
 
 const SuggestionsSectionSuspense = ({

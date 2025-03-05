@@ -17,6 +17,7 @@ import {
   Loader2Icon,
   LockIcon,
   MoreVerticalIcon,
+  RefreshCcw,
   RotateCwIcon,
   SparklesIcon,
   TrashIcon,
@@ -201,10 +202,28 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
     defaultValues: video,
   });
 
+  const restore = trpc.videos.revalidate.useMutation({
+    onSuccess: () => {
+      toast.success("Video revalidated", { id: "revalidate-video" });
+      utils.studio.getOne.invalidate({ id: video.id });
+      utils.studio.getMany.invalidate();
+    },
+    onError: (e) => {
+      toast.error("Failed to revalidate video", { id: "revalidate-video" });
+
+      console.log(e);
+    },
+  });
+
   const onDelete = () => {
     toast.loading("Deleting video ", { id: "update-video" });
     remove.mutate({ id: video.id });
     router.push("/studio");
+  };
+
+  const onRestore = () => {
+    toast.loading("Revalidating video ", { id: "revalidate-video" });
+    restore.mutate({ id: video.id });
   };
 
   async function onSubmit(values: z.infer<typeof videoUpdateSchema>) {
@@ -254,7 +273,11 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant={"ghost"} size={"icon"}>
+                  <Button
+                    variant={"ghost"}
+                    size={"icon"}
+                    className="rounded-full"
+                  >
                     <MoreVerticalIcon />
                   </Button>
                 </DropdownMenuTrigger>
@@ -262,6 +285,10 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                   <DropdownMenuItem onClick={onDelete}>
                     <TrashIcon className="site-4 ml-2" />
                     Delete
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onRestore}>
+                    <RefreshCcw className="site-4 ml-2" />
+                    Restore
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

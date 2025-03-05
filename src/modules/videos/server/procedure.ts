@@ -271,4 +271,65 @@ export const videosRouter = createTRPCRouter({
       }
       return video;
     }),
+  revalidate: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+
+      if (!input.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Missing video id",
+        });
+      }
+
+      const [video] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)));
+
+      if (!video) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Video not found",
+        });
+      }
+
+      if (!video.muxUploadId) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Mux upload id  not found",
+        });
+      }
+      const directUpload = await mux.video.uploads.retrieve(video.muxUploadId);
+
+      if (!directUpload || !directUpload.asset_id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Mux upload id  not found",
+        });
+      }
+
+      const asset = await mux.video.assets.retrieve(directUpload.asset_id);
+
+      if (!asset) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Mux upload id  not found",
+        });
+      }
+      const [updatedVideo] = await db
+        .update(videos)
+        .set({
+          muxStatus: asset.status,
+          muxPlaybackId: asset.playback_ids?.[0].id,
+          muxAssetId: asset.id,
+          duration: asset.duration ? Math.round(asset.duration * 1000) : 0,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
+        .returning();
+
+      return updatedVideo;
+    }),
 });
