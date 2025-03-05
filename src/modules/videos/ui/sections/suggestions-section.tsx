@@ -7,7 +7,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import {
   VideoRowCard,
   VideoRowCardSkeleton,
-  videoRowCardSkeleton,
 } from "../components/video-row-card";
 import {
   VideoGridCard,

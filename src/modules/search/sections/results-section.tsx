@@ -5,8 +5,15 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Suspense } from "react";
 import { DEFAULT_LIMIT } from "@/constants";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { VideoGridCard } from "@/modules/videos/ui/components/video-grid-card";
-import { VideoRowCard } from "@/modules/videos/ui/components/video-row-card";
+import {
+  VideoGridCard,
+  VideoGridCardSkeleton,
+} from "@/modules/videos/ui/components/video-grid-card";
+import {
+  VideoRowCard,
+  VideoRowCardSkeleton,
+} from "@/modules/videos/ui/components/video-row-card";
+import { InfiniteScroll } from "@/components/infinite-scroll";
 
 interface ResultsSectionProps {
   categoryId?: string;
@@ -24,7 +31,24 @@ export const ResultsSection = ({ categoryId, query }: ResultsSectionProps) => {
 };
 
 const ResulsSectionSkeleton = () => {
-  return <div>Loading</div>;
+  const isMobile = useIsMobile();
+  return (
+    <>
+      {isMobile ? (
+        <div className="flex flex-col gap-4 gap-y-10">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <VideoGridCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <VideoRowCardSkeleton key={index} size={"default"} />
+          ))}
+        </div>
+      )}
+    </>
+  );
 };
 
 const ResulsSectionSuspense = ({ categoryId, query }: ResultsSectionProps) => {
@@ -57,6 +81,11 @@ const ResulsSectionSuspense = ({ categoryId, query }: ResultsSectionProps) => {
             ))}
         </div>
       )}
+      <InfiniteScroll
+        hasNextPage={resultQuery.hasNextPage}
+        isFetchingNextPage={resultQuery.isFetchingNextPage}
+        fetchNextPage={resultQuery.fetchNextPage}
+      />
     </>
   );
 };
