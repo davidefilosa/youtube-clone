@@ -18,6 +18,7 @@ export const useSubscription = ({
   const subscribe = trpc.subscriptions.create.useMutation({
     onSuccess: () => {
       utils.videos.getOne.invalidate({ id: fromVideoId });
+      utils.videos.getManySubsciber.invalidate();
     },
     onError: (error) => {
       if (error.data?.code === "UNAUTHORIZED") {

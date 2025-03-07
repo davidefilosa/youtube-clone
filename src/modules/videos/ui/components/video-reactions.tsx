@@ -22,6 +22,7 @@ export const VideoReactions = ({
   const createReaction = trpc.videoReaction.create.useMutation({
     onSuccess: () => {
       utils.videos.getOne.invalidate({ id: videoId });
+      utils.playlist.getLiked.invalidate();
     },
   });
   return (

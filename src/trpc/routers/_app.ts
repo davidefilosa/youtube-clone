@@ -9,6 +9,7 @@ import { commentsRouter } from "@/modules/comment/server/procedure";
 import { commentReactionRouter } from "@/modules/comment-reactions/server/procedure";
 import { suggestionsRouter } from "@/modules/suggestions/server/procedures";
 import { searchRouter } from "@/modules/search/server/procedures";
+import { playlistRouter } from "@/modules/playlist/server/procedure";
 
 export const appRouter = createTRPCRouter({
   categories: categoriesRouter,
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   commentReaction: commentReactionRouter,
   suggestions: suggestionsRouter,
   search: searchRouter,
+  playlist: playlistRouter,
 });
 
 // Export only the type of a router!
