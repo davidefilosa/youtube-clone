@@ -41,6 +41,7 @@ export const userRelations = relations(usersTable, ({ many }) => ({
   }),
   comments: many(comments),
   commentReactions: many(commentReactions),
+  playlists: many(playlists),
 }));
 
 export const categories = pgTable(
@@ -293,3 +294,57 @@ export const commentReactionsRelations = relations(
     }),
   })
 );
+
+export const playlists = pgTable("playlist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  userId: uuid("user_id")
+    .references(() => usersTable.id, { onDelete: "cascade" })
+    .notNull(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const playlistVideos = pgTable(
+  "playlist_videos",
+  {
+    playlistId: uuid("playlist_id")
+      .references(() => playlists.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    videoId: uuid("video_id")
+      .references(() => videos.id, { onDelete: "cascade" })
+      .notNull(),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({
+      name: "playlist_videos_pk",
+      columns: [t.playlistId, t.videoId],
+    }),
+  ]
+);
+
+export const playlistVideosRelation = relations(playlistVideos, ({ one }) => ({
+  playlist: one(playlists, {
+    fields: [playlistVideos.playlistId],
+    references: [playlists.id],
+  }),
+  video: one(videos, {
+    fields: [playlistVideos.videoId],
+    references: [videos.id],
+  }),
+}));
+
+export const playlistRelation = relations(playlists, ({ one, many }) => ({
+  user: one(usersTable, {
+    fields: [playlists.userId],
+    references: [usersTable.id],
+  }),
+  playlistVideos: many(playlistVideos),
+}));

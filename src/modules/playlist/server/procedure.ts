@@ -6,6 +6,8 @@ import {
   videos,
   videoReactions,
   subscriptions,
+  playlists,
+  playlistVideos,
 } from "@/db/schema";
 import { mux } from "@/lib/mux";
 import { workflow } from "@/lib/workflow";
@@ -179,6 +181,82 @@ export const playlistRouter = createTRPCRouter({
       const lastItem = items[items.length - 1];
       const nextCursor = hasMore
         ? { id: lastItem.id, likedAt: lastItem.likedAt }
+        : null;
+      return { items, nextCursor };
+    }),
+
+  create: protectedProcedure
+    .input(z.object({ name: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const { name } = input;
+      const { id: userId } = ctx.user;
+
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      if (!name) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
+      const [newPlaylist] = await db
+        .insert(playlists)
+        .values({ name, userId })
+        .returning();
+
+      return newPlaylist;
+    }),
+
+  getMany: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({ id: z.string().uuid(), createdAt: z.date() })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+      const { cursor, limit } = input;
+
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const data = await db
+        .select({
+          ...getTableColumns(playlists),
+          videosCount: db.$count(
+            playlistVideos,
+            eq(playlistVideos.playlistId, playlists.id)
+          ),
+          user: usersTable,
+        })
+        .from(playlists)
+        .innerJoin(usersTable, eq(playlists.userId, usersTable.id))
+        .where(
+          and(
+            eq(playlists.userId, userId),
+            cursor
+              ? or(
+                  lt(playlists.createdAt, cursor.createdAt),
+                  and(
+                    eq(playlists.createdAt, cursor.createdAt),
+                    lt(videos.id, cursor.id)
+                  )
+                )
+              : undefined
+          )
+        )
+        .orderBy(desc(playlists.createdAt), desc(playlists.id))
+        .limit(limit + 1);
+
+      const hasMore = data.length > limit;
+      const items = hasMore ? data.slice(0, -1) : data;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? { id: lastItem.id, createdAt: lastItem.createdAt }
         : null;
       return { items, nextCursor };
     }),
