@@ -208,6 +208,28 @@ export const playlistRouter = createTRPCRouter({
       return newPlaylist;
     }),
 
+  remove: protectedProcedure
+    .input(z.object({ playlistId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { playlistId } = input;
+      const { id: userId } = ctx.user;
+
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      if (!playlistId) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
+      const [removedPlaylist] = await db
+        .delete(playlists)
+        .where(and(eq(playlists.id, playlistId), eq(playlists.userId, userId)))
+        .returning();
+
+      return removedPlaylist;
+    }),
+
   getMany: protectedProcedure
     .input(
       z.object({
@@ -375,5 +397,73 @@ export const playlistRouter = createTRPCRouter({
         .returning();
 
       return newVideo;
+    }),
+  getVideos: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({ id: z.string().uuid(), createdAt: z.date() })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+        playlistId: z.string(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { cursor, limit, playlistId } = input;
+      const { id: userId } = ctx.user;
+
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const data = await db
+        .with()
+        .select({
+          ...getTableColumns(videos),
+          user: { ...getTableColumns(usersTable) },
+          views: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
+          likes: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like")
+            )
+          ),
+          dislikes: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike")
+            )
+          ),
+        })
+        .from(videos)
+        .innerJoin(usersTable, eq(videos.userId, usersTable.id))
+        .innerJoin(playlistVideos, eq(playlistVideos.videoId, videos.id))
+        .where(
+          and(
+            eq(videos.visibility, "public"),
+            eq(playlistVideos.playlistId, playlistId),
+            cursor
+              ? or(
+                  lt(playlistVideos.createdAt, cursor.createdAt),
+                  and(
+                    eq(playlistVideos.createdAt, cursor.createdAt),
+                    lt(videos.id, cursor.id)
+                  )
+                )
+              : undefined
+          )
+        )
+        .orderBy(desc(playlistVideos.createdAt), desc(videos.id))
+        .limit(limit + 1);
+
+      const hasMore = data.length > limit;
+      const items = hasMore ? data.slice(0, -1) : data;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? { id: lastItem.id, createdAt: lastItem.createdAt }
+        : null;
+      return { items, nextCursor };
     }),
 });

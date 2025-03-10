@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddPlaylistModal } from "@/modules/playlist/ui/components/add-playlist-modal";
+import { trpc } from "@/trpc/client";
 import {
   ListPlusIcon,
   MoreHorizontalIcon,
@@ -20,7 +21,7 @@ import { toast } from "sonner";
 interface VideoMenuProps {
   videoId: string;
   variant?: "ghost" | "secondary";
-  onRemove?: () => void;
+  onRemove?: (videoId: string) => void;
 }
 
 export const VideoMenu = ({ videoId, variant, onRemove }: VideoMenuProps) => {
@@ -30,6 +31,7 @@ export const VideoMenu = ({ videoId, variant, onRemove }: VideoMenuProps) => {
     navigator.clipboard.writeText(fullURL);
     toast.success("Link copied!");
   };
+
   return (
     <>
       <AddPlaylistModal

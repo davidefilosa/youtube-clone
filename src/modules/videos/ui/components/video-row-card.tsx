@@ -28,7 +28,7 @@ const videoRowCardVariants = cva("group flex min-w-0", {
 
 interface VideoRowCardProps extends VariantProps<typeof videoRowCardVariants> {
   video: VideoGetManyOutput["items"][number];
-  onRemove?: () => void;
+  onRemove?: (videoId: string) => void;
 }
 
 const thumbnailVariants = cva("relative flex-none", {

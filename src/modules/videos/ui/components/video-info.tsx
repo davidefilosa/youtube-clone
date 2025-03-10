@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface VideoInfoProps {
   video: VideoGetManyOutput["items"][number];
-  onRemove?: () => void;
+  onRemove?: (videoId: string) => void;
 }
 
 export const VideoInfoSkeleton = () => {
@@ -62,7 +62,7 @@ export const VideoInfo = ({ video, onRemove }: VideoInfoProps) => {
         </Link>
       </div>
       <div className="flex-shrink-0">
-        <VideoMenu videoId={video.id} variant="ghost" />
+        <VideoMenu videoId={video.id} variant="ghost" onRemove={onRemove} />
       </div>
     </div>
   );
